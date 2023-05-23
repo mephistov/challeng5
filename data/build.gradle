@@ -36,6 +36,7 @@ dependencies {
 
     //Local Libraries
     implementation project(path: ':domain')
+    implementation project(path: ':entities')
 
     implementation 'androidx.core:core-ktx:1.10.1'
     implementation 'androidx.appcompat:appcompat:1.6.1'
@@ -62,6 +63,5 @@ dependencies {
     implementation "com.squareup.retrofit2:converter-gson:2.9.0"
     implementation "com.squareup.okhttp3:logging-interceptor:5.0.0-alpha.2"
 
-    //Deezer Api
-    implementation 'com.deezer.sdk:deezer-sdk-android:0.13.5'
+
 }
