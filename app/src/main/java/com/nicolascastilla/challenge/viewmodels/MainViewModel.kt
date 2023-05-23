@@ -3,6 +3,7 @@ package com.nicolascastilla.challenge.viewmodels
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nicolascastilla.domain.usecases.GetTrendingUseCase
@@ -26,9 +27,12 @@ class MainViewModel @Inject constructor(
 
     fun connectDeezer(){
         viewModelScope.launch(Dispatchers.IO) {
-            getTrendingsUseCase.getAllTrendingsSongs().collect {
+            val data = getTrendingsUseCase.getAllTrendingsSongsTest()
+            Log.e("REsponse",data.first().title)
+            /*val data = getTrendingsUseCase.getAllTrendingsSongs()
+            data.collect {
                 _myTrendings.value = it
-            }
+            }*/
         }
 
     }

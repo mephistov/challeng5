@@ -24,9 +24,9 @@ class GetTrendingsUseCaseImpl @Inject constructor(
         }
     }
 
-
-
-
+    override suspend fun getAllTrendingsSongsTest(): List<Song> {
+        return repository.getNetworkTrendings()
+    }
 
 
 }

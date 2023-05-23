@@ -11,7 +11,7 @@ class ChallengeService @Inject constructor(private val api: ChallengeApi) {
 
     suspend fun getTrendings():List<Song>{
         return withContext(Dispatchers.IO) {
-             api.searchSongs ()
+             api.searchSongs().data
         }
     }
 
