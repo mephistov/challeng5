@@ -27,12 +27,10 @@ class MainViewModel @Inject constructor(
 
     fun connectDeezer(){
         viewModelScope.launch(Dispatchers.IO) {
-            val data = getTrendingsUseCase.getAllTrendingsSongsTest()
-            Log.e("REsponse",data.first().title)
-            /*val data = getTrendingsUseCase.getAllTrendingsSongs()
+            val data = getTrendingsUseCase.getAllTrendingsSongs()
             data.collect {
                 _myTrendings.value = it
-            }*/
+            }
         }
 
     }
