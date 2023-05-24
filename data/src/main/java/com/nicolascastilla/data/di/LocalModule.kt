@@ -12,5 +12,5 @@ import dagger.hilt.components.SingletonComponent
 abstract class LocalModule {
 
     @Binds
-    abstract fun bindsReminderRepository(repoImpl: RepositoryImp): ChallengeRepository
+    abstract fun bindsChallengeRepository(repoImpl: RepositoryImp): ChallengeRepository
 }

@@ -21,7 +21,7 @@ object NetworkModule {
     @Provides
     fun provideRetrofit(): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("https://someurl")
+            .baseUrl("https://api.deezer.com")
             .addConverterFactory(GsonConverterFactory.create())
             .client(httpClient.build())
             .build()
