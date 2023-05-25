@@ -50,6 +50,10 @@ dependencies {
     testImplementation "org.mockito:mockito-core:5.3.1"
     testImplementation "org.mockito.kotlin:mockito-kotlin:4.0.0"
 
+    // design compose
+    implementation 'androidx.constraintlayout:constraintlayout-compose:1.1.0-alpha09'
+
+
 
     //Room
     implementation "androidx.room:room-ktx:2.5.1"

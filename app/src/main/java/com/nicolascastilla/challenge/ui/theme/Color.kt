@@ -7,3 +7,4 @@ val CustomGrey = Color(0xFFc4c4c4)
 val CustomBlue = Color(0xFF3c3abe)
 
 val ElemetBackgound = Color(0x26fcfcff)
+val BluePalid = Color(0xbf3c3abe)
