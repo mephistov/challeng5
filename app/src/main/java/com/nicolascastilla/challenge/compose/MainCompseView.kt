@@ -3,7 +3,6 @@
 package com.nicolascastilla.challenge.compose
 
 import android.content.Context
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -13,27 +12,19 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
-import androidx.compose.material3.R
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nicolascastilla.challenge.compose.utils.ChallengeButton
-import com.nicolascastilla.challenge.ui.theme.CustomBlack
-import com.nicolascastilla.challenge.ui.theme.CustomGrey
-import com.nicolascastilla.challenge.ui.theme.ElemetBackgound
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.clickable
 import androidx.compose.material.*
@@ -42,15 +33,21 @@ import androidx.compose.material.DrawerValue
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Surface
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import com.nicolascastilla.entities.Song
 import kotlinx.coroutines.launch
+import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.ui.text.font.FontWeight
+import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.nicolascastilla.challenge.compose.utils.RemoteImageFull
+import com.nicolascastilla.challenge.ui.theme.*
+import com.nicolascastilla.challenge.viewmodels.MainViewModel
 
 
 @Composable
@@ -61,6 +58,9 @@ fun MainView() {
     val modifier: Modifier = Modifier
     val scaffolState = rememberScaffoldState()
     val coroutineScope= rememberCoroutineScope()
+    val viewModel = viewModel<MainViewModel>()
+    val isTopViewVisible by viewModel.isTopViewVisible.collectAsState()
+
     Scaffold(
         scaffoldState = scaffolState,
         topBar = { TopBar(scaffolState) },
@@ -79,12 +79,20 @@ fun MainView() {
 
     ) {
         modifier.padding(it)
-        Box(modifier = Modifier.padding(16.dp)) {
+        Box(
+            modifier = Modifier
+                .padding(16.dp)
+                .background(Color.Yellow)
+                .fillMaxWidth()
+        ) {
             Column {
-                TrendingNow()
+                TrendingNow(viewModel)
                 CustomList()
             }
         }
+
+        MainExpandableBottomView(viewModel)
+
     }
 
 }
@@ -136,21 +144,151 @@ fun TopBar(scaffoldState: ScaffoldState) {
     }
 }
 
+fun tempListSongs():List<Song>{
+    return emptyList()
+}
+
 @Composable
-fun TrendingNow() {
+fun TrendingNow(viewModel: MainViewModel) {
+    val isLoading by viewModel.isLoadins.collectAsState(initial = true)
+    val trendings by viewModel.myTrendings.collectAsState(emptyList())
+    viewModel.getTrendings()
     Column {
         Text(
             text = "Trending right now",
             color = Color(0xFFFCFCFC),
-            style = MaterialTheme.typography.h6
+            style = MaterialTheme.typography.h5
         )
-        LazyRow {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(210.dp)
+                .background(Color.Green)
+        ){
+            if (isLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            }else {
+                LazyRow(
+                    modifier = Modifier .padding(10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    items(trendings) { song ->
+                        RowTrending(song,viewModel)
+                    }
+                }
+            }
+        }
+
+        LazyRow() {
             items(listOf("Rock", "Hip-pop", "etc")) { genre ->
                 Button(onClick = { /*TODO*/ }) {
                     Text(genre)
                 }
             }
         }
+    }
+}
+
+@Composable
+fun RowTrending(song: Song,viewModel: MainViewModel){
+   val context = LocalContext.current
+
+    Box(
+        modifier = Modifier
+            .width(260.dp)
+            .fillMaxHeight()
+            .padding(10.dp)
+            .background(Color.White, shape = RoundedCornerShape(16.dp))
+           // .padding(bottom = 10.dp)
+    ) {
+        // Imagen de fondo
+        RemoteImageFull(song.artist.picture_big)
+
+        ConstraintLayout(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            val (imgMore, infoZone) = createRefs()
+
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clickable { /* Acción al hacer clic en la imagen */ }
+                    .constrainAs(imgMore) {
+                        top.linkTo(parent.top, margin = 1.dp)
+                        end.linkTo(parent.end, margin = 10.dp)
+
+                    }
+
+            ){
+                Text("...",
+                    color = Color.White,
+                    style = TextStyle(fontSize = 25.sp, fontWeight= FontWeight.Bold)
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .height(60.dp)
+                    .padding(5.dp)
+                    .clickable {
+                        viewModel.updateCurrentSong(song)
+                        viewModel.setViewVisibility(true)
+                    }
+                    .fillMaxWidth(0.9f)
+                    .background(BluePalid, shape = RoundedCornerShape(16.dp))
+                    .constrainAs(infoZone) {
+                        bottom.linkTo(parent.bottom, margin = 5.dp)
+                        end.linkTo(parent.end, margin = 10.dp)
+                        start.linkTo(parent.start, margin = 10.dp)
+
+                    }
+
+            ) {
+               Row(
+                   verticalAlignment = Alignment.CenterVertically,
+                   modifier = Modifier
+                       .fillMaxHeight()
+                       .padding(start = 5.dp)
+               ){
+                   Column(
+                       modifier = Modifier
+                           .fillMaxWidth(0.8f)
+                           .padding(start = 5.dp)
+                   ) {
+                      Text(
+                          text= song.title,
+                          color = Color(0xFFFCFCFC),
+                          style = TextStyle(fontSize = 12.sp, fontWeight= FontWeight.Bold)
+                      )
+                       Row(
+                           verticalAlignment = Alignment.CenterVertically,
+                       ){
+                           Image(
+                               painter = painterResource(id = com.nicolascastilla.challenge.R.drawable.music_icon),
+                               contentDescription = "Music",
+                               modifier = Modifier.size(13.dp),
+                           )
+                           Text(
+                               text=" ${song.artist.name} ",
+                               color = Color(0xFFFCFCFC),
+                               style = TextStyle(fontSize = 10.sp)
+                           )
+                       }
+
+                   }
+                   Image(
+                       painter = painterResource(id = com.nicolascastilla.challenge.R.drawable.play_d),
+                       contentDescription = "Play",
+                       modifier = Modifier.size(48.dp),
+                   )
+               }
+            }
+        }
+
+
+
     }
 }
 
@@ -187,6 +325,7 @@ fun ListItem(item: String) {
         )
     }
 }
+/*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MusicScreen() {
@@ -272,16 +411,9 @@ fun SongRow(song: Song) {
         )
     }
 }
+*/
 
-data class Song(val title: String, val artist: String)
 
-fun getSongs(): List<Song> {
-    return listOf(
-        Song("I'm Good (Blue)", "David Guetta & Bebe Rexha"),
-        Song("Under the Influence", "Chris Brown"),
-        Song("Forget Me", "Lewis Capaldi")
-    )
-}
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {

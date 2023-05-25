@@ -82,6 +82,7 @@ dependencies {
 
     //for compose
     implementation 'androidx.constraintlayout:constraintlayout-compose:1.1.0-alpha09'
+    implementation 'androidx.compose.foundation:foundation:1.4.3'
 
     // google dagger hilt
     implementation("com.google.dagger:hilt-android:2.44")
@@ -108,6 +109,8 @@ dependencies {
     //Room
     implementation "androidx.room:room-ktx:2.5.1"
     kapt "androidx.room:room-compiler:2.5.1"
+    //remote images
+    implementation "io.coil-kt:coil-compose:1.4.0"
 }
 // Allow references to generated code
 kapt {
