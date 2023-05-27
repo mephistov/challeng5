@@ -63,7 +63,7 @@ fun MainView() {
 
     Scaffold(
         scaffoldState = scaffolState,
-        topBar = { TopBar(scaffolState) },
+       // topBar = { TopBar(scaffolState) },
         backgroundColor = CustomBlack,
         drawerContent = {
             Column {
@@ -82,10 +82,12 @@ fun MainView() {
         Box(
             modifier = Modifier
                 .padding(16.dp)
-                .background(Color.Yellow)
+                .background(CustomBlack)
                 .fillMaxWidth()
         ) {
             Column {
+                TopBar(scaffolState)
+                Spacer(modifier = Modifier.height(20.dp))
                 TrendingNow(viewModel)
                 CustomList()
             }
@@ -163,7 +165,7 @@ fun TrendingNow(viewModel: MainViewModel) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(210.dp)
-                .background(Color.Green)
+                //.background(Color.Green)
         ){
             if (isLoading) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -175,7 +177,7 @@ fun TrendingNow(viewModel: MainViewModel) {
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     items(trendings) { song ->
-                        RowTrending(song,viewModel)
+                        RowTrending(song,trendings,viewModel)
                     }
                 }
             }
@@ -192,8 +194,7 @@ fun TrendingNow(viewModel: MainViewModel) {
 }
 
 @Composable
-fun RowTrending(song: Song,viewModel: MainViewModel){
-   val context = LocalContext.current
+fun RowTrending(song: Song, listSongs: List<Song>, viewModel: MainViewModel){
 
     Box(
         modifier = Modifier
@@ -233,7 +234,7 @@ fun RowTrending(song: Song,viewModel: MainViewModel){
                     .height(60.dp)
                     .padding(5.dp)
                     .clickable {
-                        viewModel.updateCurrentSong(song)
+                        viewModel.updateCurrentSong(song,listSongs)
                         viewModel.setViewVisibility(true)
                     }
                     .fillMaxWidth(0.9f)
