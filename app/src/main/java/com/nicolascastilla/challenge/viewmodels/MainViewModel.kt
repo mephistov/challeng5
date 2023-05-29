@@ -1,16 +1,12 @@
 package com.nicolascastilla.challenge.viewmodels
 
-import android.content.ComponentName
-import android.content.ServiceConnection
-import android.media.AudioAttributes
 import android.media.MediaPlayer
-import android.os.IBinder
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.nicolascastilla.challenge.compose.utils.MusicService
-import com.nicolascastilla.challenge.compose.utils.ServiceManager
+import com.nicolascastilla.challenge.utils.ServiceManager
+import com.nicolascastilla.challenge.utils.Utils
 import com.nicolascastilla.domain.usecases.GetTrendingUseCase
 import com.nicolascastilla.entities.Song
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,7 +21,7 @@ import javax.inject.Inject
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val getTrendingsUseCase: GetTrendingUseCase,
-    private val musicService: ServiceManager
+    private val musicManager: ServiceManager
 ): ViewModel() {
 
     private val _myTrendings: MutableStateFlow<List<Song>> = MutableStateFlow(emptyList())
@@ -52,10 +48,6 @@ class MainViewModel @Inject constructor(
     var job: Job? = null
 
     init {
-        viewModelScope.launch(Dispatchers.IO){
-            musicService.init()
-        }
-
 
     }
 
@@ -75,6 +67,8 @@ class MainViewModel @Inject constructor(
     fun updateCurrentSong(song: Song, cListSongs: List<Song>){
         currentSong = song
         listSongs = cListSongs
+        Utils.currentSong = currentSong
+        Utils.listSongsPlayable = listSongs
         currentSongPLaying = cListSongs.indexOf(song)
     }
 
@@ -83,7 +77,6 @@ class MainViewModel @Inject constructor(
         if(b){
             currentSong?.let {
                 initMediaPlayer(it)
-                playPause()
             }
         }else{
             stop()
@@ -118,7 +111,7 @@ class MainViewModel @Inject constructor(
     fun initMediaPlayer(song: Song) {
         currentTitle.value = song.title
         currentArtist.value = song.artist.name
-        _player.value = musicService.initPLayer(song.preview)
+        _player.value = musicManager.initPLayer(song)
         _player.value?.let {
             it.setOnPreparedListener { mediaPlayer ->
                 mediaPlayer.start()
@@ -162,26 +155,20 @@ class MainViewModel @Inject constructor(
 
 
     fun playPause() {
-        player.value?.let {
-            if (it.isPlaying) {
-                isPlaying.value = false
-                it.pause()
-            } else {
-                isPlaying.value = true
-                it.start()
-            }
-
-        }
+        musicManager.playPause()
+        val testbool = musicManager.isPLaying()
+        isPlaying.value = testbool
     }
 
     fun stop() {
         job?.cancel()
+        musicManager.stopMusic()
         player.value?.release()
         _player.value = null
     }
 
     fun destroy() {
-        musicService.unbindService()
+        musicManager.unbindService()
 
     }
 

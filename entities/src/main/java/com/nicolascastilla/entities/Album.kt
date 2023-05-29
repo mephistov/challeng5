@@ -1,5 +1,6 @@
 package com.nicolascastilla.entities
 
+
 data class Album(
     val cover: String,
     val cover_big: String,

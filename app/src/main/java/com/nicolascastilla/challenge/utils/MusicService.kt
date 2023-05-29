@@ -1,14 +1,15 @@
-package com.nicolascastilla.challenge.compose.utils
+package com.nicolascastilla.challenge.utils
 
 import android.app.*
 import android.content.Intent
 import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.os.Binder
-import android.os.Build
 import android.os.IBinder
-import com.nicolascastilla.challenge.MainActivity
-import com.nicolascastilla.challenge.R
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class MusicService: Service() {
 
@@ -29,18 +30,50 @@ class MusicService: Service() {
                     .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                     .build()
             )
+            setOnPreparedListener {
+                it.start()
+            }
             setDataSource(url)
             prepareAsync()
         }
         return  mediaPlayer
     }
 
+    fun changeMusic(song:String){
+        mediaPlayer?.apply {
+            stop()
+            initPlayer(song)
+        }
+
+    }
+
+    fun isPlaying():Boolean{
+        mediaPlayer?.let {
+            return it.isPlaying
+        }
+        return false
+    }
+
     fun pauseMusic() {
         mediaPlayer?.pause()
     }
 
+    fun stopMusic() {
+        mediaPlayer?.stop()
+    }
+
     fun playMusic() {
         mediaPlayer?.start()
+    }
+
+    fun playPauseMusic(){
+        mediaPlayer?.let {
+            if (it.isPlaying) {
+                it.pause()
+            } else {
+                it.start()
+            }
+        }
     }
 
     override fun onDestroy() {
@@ -49,7 +82,7 @@ class MusicService: Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        createNotificationChannel()
+       /* createNotificationChannel()
         val notificationIntent = Intent(this, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(
             this,
@@ -60,31 +93,33 @@ class MusicService: Service() {
             .setContentTitle("Music Player")
             .setContentText("Music is playing...")
             .setSmallIcon(R.drawable.music_icon)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setContentIntent(pendingIntent)
             .build()
 
-        startForeground(1, notification)
+        startForeground(1, notification)*/
 
         // ...
+
+
         return START_STICKY
     }
 
-    fun createNotificationChannel() {
+ /*   fun createNotificationChannel() {
 
             val serviceChannel = NotificationChannel(
                 CHANNEL_ID,
                 "Music Player Channel",
-                NotificationManager.IMPORTANCE_DEFAULT
-            )
+                NotificationManager.IMPORTANCE_DEFAULT,
+            ).apply {
+                setSound(null, null)
+            }
 
             val manager = getSystemService(NotificationManager::class.java)
             manager?.createNotificationChannel(serviceChannel)
 
-    }
+    }*/
 
     // ...
 
-    companion object {
-        const val CHANNEL_ID = "MusicServiceChannel"
-    }
 }
