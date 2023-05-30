@@ -54,7 +54,13 @@ class ServiceManager @Inject constructor(
     fun initPLayer(song:Song): MediaPlayer? {
         if (bound) {
             notifManager.setLocalNotification(true)
-            return musicService.initPlayer(song.preview)
+            return musicService.initPlayer(song.preview).apply {
+                this?.let {
+                    it.setOnCompletionListener {
+                        outsiderNext()
+                    }
+                }
+            }
         }else
             return null
     }

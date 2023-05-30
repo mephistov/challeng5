@@ -19,4 +19,14 @@ class GetGenereListImpl@Inject constructor(
             // ...
         }
     }
+
+    override suspend fun searchByText(text: String):  Flow<List<Song>> = flow {
+        try {
+            val response = repository.searchByText(text)
+            emit(response)
+        } catch (e: Exception) {
+            // Maneja cualquier error que pueda ocurrir durante la llamada a la API
+            // ...
+        }
+    }
 }

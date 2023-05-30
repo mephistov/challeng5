@@ -12,4 +12,7 @@ interface ChallengeApi {
 
     @GET("search")
     suspend fun searchGenre(@Query("q") genre: String): DeezerResponse
+
+    @GET("search")
+    suspend fun searchByText(@Query("q") genre: String): DeezerResponse
 }

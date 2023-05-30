@@ -1,12 +1,14 @@
 package com.nicolascastilla.challenge.viewmodels
 
 import android.media.MediaPlayer
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nicolascastilla.challenge.utils.ServiceManager
 import com.nicolascastilla.challenge.utils.Utils
+import com.nicolascastilla.domain.usecases.FavoritesUseCase
 import com.nicolascastilla.domain.usecases.GetGenereUseCase
 import com.nicolascastilla.domain.usecases.GetTrendingUseCase
 import com.nicolascastilla.entities.Song
@@ -14,8 +16,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -23,6 +27,7 @@ import javax.inject.Inject
 class MainViewModel @Inject constructor(
     private val getTrendingsUseCase: GetTrendingUseCase,
     private val getGenereUseCase: GetGenereUseCase,
+    private val getFavoriteUseCase: FavoritesUseCase,
     private val musicManager: ServiceManager
 ): ViewModel() {
 
@@ -45,6 +50,12 @@ class MainViewModel @Inject constructor(
     val currentSongPosition: MutableStateFlow<Float> = MutableStateFlow(0.0f)
     val currentTitle: MutableStateFlow<String> = MutableStateFlow("")
     val currentArtist: MutableStateFlow<String> = MutableStateFlow("")
+    val img1: MutableStateFlow<String> = MutableStateFlow("")
+    val img2: MutableStateFlow<String> = MutableStateFlow("")
+
+
+
+
 
     var currentSong: Song? = null
     var listSongs: List<Song>? = null
@@ -62,11 +73,15 @@ class MainViewModel @Inject constructor(
     fun getTrendings(){
         _loading.value = true
         viewModelScope.launch(Dispatchers.IO) {
-            val data = getTrendingsUseCase.getAllTrendingsSongs()
-            _loading.value = false
+            val data = getTrendingsUseCase.getAllTrendingsSongs().map {list->
+                list.map { item->
+                    item.isFavorite = getFavoriteUseCase.isFavorite(item)
+                    item
+                }
+            }
             data.collect {
                 _myTrendings.value = it
-
+                _loading.value = false
             }
         }
 
@@ -75,13 +90,35 @@ class MainViewModel @Inject constructor(
     fun getGenereSearch(genere:String){
         isLoadingGenere.value = true
         viewModelScope.launch(Dispatchers.IO) {
-            val data = getGenereUseCase.getGenereList(genere)
+            val data = getGenereUseCase.getGenereList(genere).map {list->
+                list.map { item->
+                    item.isFavorite = getFavoriteUseCase.isFavorite(item)
+                    item
+                }
+            }
+
             data.collect {
                 genereList.value = it
                 isLoadingGenere.value = false
             }
         }
 
+    }
+    fun searchByName(text: String) {
+        isLoadingGenere.value = true
+        viewModelScope.launch(Dispatchers.IO) {
+            val data = getGenereUseCase.searchByText(text).map {list->
+                list.map { item->
+                    item.isFavorite = getFavoriteUseCase.isFavorite(item)
+                    item
+                }
+            }
+
+            data.collect {
+                genereList.value = it
+                isLoadingGenere.value = false
+            }
+        }
     }
 
     fun updateCurrentSong(song: Song, cListSongs: List<Song>){
@@ -95,6 +132,46 @@ class MainViewModel @Inject constructor(
     fun setViewVisibility(b: Boolean ) {
         _isTopViewVisible.value = b
     }
+
+    //----- favorites --------------------------------
+
+    val favoritesList: Flow<List<Song>> = getFavoriteUseCase.getFavorites()
+
+    fun removeFavourite(song: Song){
+        viewModelScope.launch(Dispatchers.IO) {
+            getFavoriteUseCase.deleteFavorite(song)
+            //TODO actualizar la lista de vista anterior
+        }
+    }
+
+    fun setFavorite(song: Song){
+        viewModelScope.launch(Dispatchers.IO) {
+            if(!song.isFavorite) {
+                getFavoriteUseCase.setFavorite(song)
+            } else {
+                getFavoriteUseCase.deleteFavorite(song)
+            }
+
+        }
+        updateList(song)
+    }
+
+    fun updateList(song: Song){
+        val newIsFavorite = !song.isFavorite
+        val updatedSong = song.copy(isFavorite = newIsFavorite)
+        val updatedList = genereList.value.map {
+            if (it.id == song.id) updatedSong else it
+        }
+        genereList.value = updatedList
+
+        val updatedListT = _myTrendings.value.map {
+            if (it.id == song.id) updatedSong else it
+        }
+        _myTrendings.value = updatedListT
+    }
+
+
+
 
     //------- player ---
     fun nextSong(){
@@ -119,13 +196,19 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    val myData = mutableStateOf("Initial Data")
 
-
-    fun initMediaPlayer(song: Song) {
+    fun updateUI(song: Song){
         currentTitle.value = song.title
         currentArtist.value = song.artist.name
+        img1.value = song.artist.picture_big
+        img2.value = song.album.cover_big
         isPlaying.value = true;
-        _player.value = musicManager.initPLayer(song)
+    }
+
+    fun initMediaPlayer(song: Song) {
+        updateUI(song)
+        _player.value = musicManager.initPLayer(song,)
         _player.value?.let {
             it.setOnPreparedListener { mediaPlayer ->
                 mediaPlayer.start()
@@ -140,6 +223,10 @@ class MainViewModel @Inject constructor(
 
                 }
             }
+            it.setOnCompletionListener {
+                nextSong()
+            }
+
         }
     }
 
@@ -162,6 +249,8 @@ class MainViewModel @Inject constructor(
         musicManager.unbindService()
 
     }
+
+
 
 
 }
