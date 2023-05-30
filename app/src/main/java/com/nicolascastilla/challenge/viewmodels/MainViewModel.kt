@@ -208,7 +208,7 @@ class MainViewModel @Inject constructor(
 
     fun initMediaPlayer(song: Song) {
         updateUI(song)
-        _player.value = musicManager.initPLayer(song,)
+        _player.value = musicManager.initPLayer(song)
         _player.value?.let {
             it.setOnPreparedListener { mediaPlayer ->
                 mediaPlayer.start()
