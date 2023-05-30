@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nicolascastilla.challenge.utils.ServiceManager
 import com.nicolascastilla.challenge.utils.Utils
+import com.nicolascastilla.domain.usecases.GetGenereUseCase
 import com.nicolascastilla.domain.usecases.GetTrendingUseCase
 import com.nicolascastilla.entities.Song
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,11 +22,14 @@ import javax.inject.Inject
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val getTrendingsUseCase: GetTrendingUseCase,
+    private val getGenereUseCase: GetGenereUseCase,
     private val musicManager: ServiceManager
 ): ViewModel() {
 
     private val _myTrendings: MutableStateFlow<List<Song>> = MutableStateFlow(emptyList())
     val myTrendings: StateFlow<List<Song>> = _myTrendings
+
+    val genereList: MutableStateFlow<List<Song>> = MutableStateFlow(emptyList())
 
     private val _loading: MutableStateFlow<Boolean> = MutableStateFlow(true)
     val isLoadins: StateFlow<Boolean> = _loading
@@ -47,8 +51,12 @@ class MainViewModel @Inject constructor(
     var currentSongPLaying : Int = 0
     var job: Job? = null
 
-    init {
+    val isLoadingGenere: MutableStateFlow<Boolean> = MutableStateFlow(true)
 
+    init {
+       /* viewModelScope.launch(Dispatchers.IO){
+            musicManager.init()
+        }*/
     }
 
     fun getTrendings(){
@@ -64,6 +72,18 @@ class MainViewModel @Inject constructor(
 
     }
 
+    fun getGenereSearch(genere:String){
+        isLoadingGenere.value = true
+        viewModelScope.launch(Dispatchers.IO) {
+            val data = getGenereUseCase.getGenereList(genere)
+            data.collect {
+                genereList.value = it
+                isLoadingGenere.value = false
+            }
+        }
+
+    }
+
     fun updateCurrentSong(song: Song, cListSongs: List<Song>){
         currentSong = song
         listSongs = cListSongs
@@ -74,13 +94,6 @@ class MainViewModel @Inject constructor(
 
     fun setViewVisibility(b: Boolean ) {
         _isTopViewVisible.value = b
-        if(b){
-            currentSong?.let {
-                initMediaPlayer(it)
-            }
-        }else{
-            stop()
-        }
     }
 
     //------- player ---
@@ -111,6 +124,7 @@ class MainViewModel @Inject constructor(
     fun initMediaPlayer(song: Song) {
         currentTitle.value = song.title
         currentArtist.value = song.artist.name
+        isPlaying.value = true;
         _player.value = musicManager.initPLayer(song)
         _player.value?.let {
             it.setOnPreparedListener { mediaPlayer ->
@@ -127,30 +141,6 @@ class MainViewModel @Inject constructor(
                 }
             }
         }
-
-       /* if(_player.value == null) {
-            _player.value = MediaPlayer().apply {
-                setAudioAttributes(
-                    AudioAttributes.Builder()
-                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                        .build()
-                )
-                setDataSource(url)
-                setOnPreparedListener { mediaPlayer ->
-                    // Inicia la reproducción cuando el MediaPlayer esté preparado
-                    mediaPlayer.start()
-                    maxSizeSong.value = mediaPlayer.duration.toFloat()
-                  /*  viewModelScope.launch(Dispatchers.IO) {
-                        while (mediaPlayer.isPlaying) {
-                            currentSongPosition.value = mediaPlayer.currentPosition.toFloat()
-                            delay(1000) // Actualiza cada segundo
-                        }
-                    }*/
-
-                }
-                prepareAsync() // Esto puede tomar tiempo para archivos grandes, por eso usamos prepareAsync() en lugar de prepare()
-            }
-        }*/
     }
 
 
@@ -161,6 +151,7 @@ class MainViewModel @Inject constructor(
     }
 
     fun stop() {
+        isPlaying.value = false
         job?.cancel()
         musicManager.stopMusic()
         player.value?.release()

@@ -2,7 +2,6 @@
 
 package com.nicolascastilla.challenge.compose
 
-import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -29,7 +28,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.clickable
 import androidx.compose.material.*
 import androidx.compose.material.Button
-import androidx.compose.material.DrawerValue
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material3.Icon
@@ -38,7 +36,6 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
 import com.nicolascastilla.entities.Song
 import kotlinx.coroutines.launch
 import androidx.compose.material.CircularProgressIndicator
@@ -52,14 +49,13 @@ import com.nicolascastilla.challenge.viewmodels.MainViewModel
 
 @Composable
 fun MainView() {
-    val drawerState = rememberDrawerState(DrawerValue.Closed)
-    val scope = rememberCoroutineScope()
-    val context: Context = LocalContext.current
     val modifier: Modifier = Modifier
     val scaffolState = rememberScaffoldState()
-    val coroutineScope= rememberCoroutineScope()
     val viewModel = viewModel<MainViewModel>()
-    val isTopViewVisible by viewModel.isTopViewVisible.collectAsState()
+    val isPLaying by viewModel.isPlaying.collectAsState(initial = false)
+
+    val isLoadingGenere by viewModel.isLoadingGenere.collectAsState(initial = true)
+    viewModel.getGenereSearch("Pop")
 
     Scaffold(
         scaffoldState = scaffolState,
@@ -81,16 +77,30 @@ fun MainView() {
         modifier.padding(it)
         Box(
             modifier = Modifier
-                .padding(16.dp)
                 .background(CustomBlack)
                 .fillMaxWidth()
         ) {
-            Column {
-                TopBar(scaffolState)
-                Spacer(modifier = Modifier.height(20.dp))
-                TrendingNow(viewModel)
-                CustomList()
+            Box(modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth()
+            ) {
+                Column {
+                    TopBar(scaffolState)
+                    Spacer(modifier = Modifier.height(20.dp))
+                    TrendingNow(viewModel)
+                    GeneroMusic(viewModel,isLoadingGenere)
+                }
             }
+
+            if(isPLaying) {
+                Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                        ) {
+                    MiniPlayerView(viewModel)
+                }
+            }
+
         }
 
         MainExpandableBottomView(viewModel)
@@ -146,10 +156,6 @@ fun TopBar(scaffoldState: ScaffoldState) {
     }
 }
 
-fun tempListSongs():List<Song>{
-    return emptyList()
-}
-
 @Composable
 fun TrendingNow(viewModel: MainViewModel) {
     val isLoading by viewModel.isLoadins.collectAsState(initial = true)
@@ -183,14 +189,43 @@ fun TrendingNow(viewModel: MainViewModel) {
             }
         }
 
-        LazyRow() {
-            items(listOf("Rock", "Hip-pop", "etc")) { genre ->
-                Button(onClick = { /*TODO*/ }) {
+        
+    }
+}
+
+@Composable
+fun GeneroMusic(viewModel: MainViewModel, isLoadingGenere: Boolean){
+
+    Column(){
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(5.dp)
+        ) {
+            items(listOf("Pop", "Rap/Hip Hop", "Rock", "Dance", "Electro", "Alternative", "Reggae", "Reggaeton", "Jazz", "Blues", "Classical", "Films/Games", "African", "Arabic", "Indian", "Kids", "Latin", "Turkish", "Asian", "Oldies", "Folk", "Soul & Funk", "Punk")
+            ) { genre ->
+                Button(onClick = {  viewModel.getGenereSearch(genre)  }) {
                     Text(genre)
                 }
             }
         }
+        Box(
+                modifier = Modifier
+                    .fillMaxSize()
+
+                ) {
+            Spacer(modifier = Modifier.height(5.dp))
+            if(isLoadingGenere){
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                )
+            }else{
+                GenereList(viewModel)
+            }
+        }
     }
+
+
+    
 }
 
 @Composable
@@ -234,8 +269,12 @@ fun RowTrending(song: Song, listSongs: List<Song>, viewModel: MainViewModel){
                     .height(60.dp)
                     .padding(5.dp)
                     .clickable {
-                        viewModel.updateCurrentSong(song,listSongs)
+                        viewModel.updateCurrentSong(song, listSongs)
                         viewModel.setViewVisibility(true)
+                        if (viewModel.isPlaying.value) {
+                            viewModel.stop()
+                        }
+                        viewModel.initMediaPlayer(song)
                     }
                     .fillMaxWidth(0.9f)
                     .background(BluePalid, shape = RoundedCornerShape(16.dp))
@@ -294,129 +333,76 @@ fun RowTrending(song: Song, listSongs: List<Song>, viewModel: MainViewModel){
 }
 
 @Composable
-fun CustomList() {
-    LazyColumn {
-        items(listOf("Item 1", "Item 2", "Item 3")) { item ->
-            ListItem(item)
+fun GenereList(viewModel: MainViewModel) {
+    val genereList by viewModel.genereList.collectAsState(emptyList())
+    LazyColumn(
+        verticalArrangement = Arrangement.spacedBy(5.dp)
+    ) {
+        items(genereList) { item ->
+            ListItem(item,viewModel,genereList)
         }
     }
 }
 
 @Composable
-fun ListItem(item: String) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Image(
-            painter = painterResource(com.nicolascastilla.challenge.R.drawable.ic_launcher_background),
-            contentDescription = null
-        )
-        Column {
-            Text(
-                text = "Title",
-                color = Color(0xFFFCFCFC)
+fun ListItem(item: Song,viewModel: MainViewModel,listSongs: List<Song>) {
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(10.dp)
+            .clickable {
+                viewModel.updateCurrentSong(item, listSongs)
+                viewModel.setViewVisibility(true)
+                if (viewModel.isPlaying.value) {
+                    viewModel.stop()
+                }
+                viewModel.initMediaPlayer(item)
+            }
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .width(60.dp)
+                    .height(60.dp)
+                    .background(Color.White, shape = RoundedCornerShape(16.dp)),
+
             )
-            Text(
-                text = "Artist",
-                color = Color(0xFFA2AE37)
-            )
+            {
+               //TODO imagen de internet
+            }
+            Spacer(modifier = Modifier.width(5.dp))
+            Column(
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = item.title,
+                    color = Color(0xFFFCFCFC),
+                    style = TextStyle(fontSize = 16.sp, fontWeight= FontWeight.Bold)
+                )
+                Text(
+                    text = item.artist.name,
+                    color = CustomGrey,
+                    style = TextStyle(fontSize = 14.sp)
+                )
+            }
         }
         Icon(
             imageVector = Icons.Filled.Favorite,
             contentDescription = null,
-            tint = Color.Red
-        )
-    }
-}
-/*
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun MusicScreen() {
-    Surface(color = Color(0xFF2D2E37)) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            TopAppBar(
-                title = {
-                    Row {
-                        Button(
-                            onClick = { /*TODO: Handle click*/ },
-                            modifier = Modifier
-                                .size(48.dp)
-                                .background(Color(0xFFC4C4C4))
-                        ) {
-                            Icon(Icons.Default.Menu, contentDescription = null)
-                        }
-                        TextField(
-                            value = "",
-                            onValueChange = {},
-                            placeholder = { Text("Search") },
-                            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                },
-                modifier = Modifier
-                    .background(Color(0xFF2D2E37))
-
-            )
-            Text(
-                text = "Trending right now",
-                color = Color(0xFFFCFCFC),
-                style = MaterialTheme.typography.h6,
-                modifier = Modifier.padding(16.dp)
-            )
-            HorizontalScrollSection()
-            LazyColumn {
-                items(getSongs()) { song ->
-                    SongRow(song = song)
-                }
-            }
-        }
-    }
-}
-@Composable
-fun HorizontalScrollSection() {
-    // Replace with your actual categories
-    val categories = listOf("Rock", "Hip Hop", "Pop", "Jazz", "Classical")
-    LazyRow {
-        items(categories) { category ->
-            Button(onClick = { /*TODO: Handle click*/ }) {
-                Text(text = category)
-            }
-        }
-    }
-}
-
-@Composable
-fun SongRow(song: Song) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Image(
-            painter = painterResource(com.nicolascastilla.challenge.R.drawable.ic_launcher_background), // Replace with your actual image resource
-            contentDescription = null,
-            modifier = Modifier.size(50.dp)
-        )
-        Column(
+            tint = Color.White,
             modifier = Modifier
-                .weight(1f)
-                .padding(start = 16.dp)
-        ) {
-            Text(text = song.title, color = Color(0xFFFCFCFC), style = MaterialTheme.typography.h6)
-            Text(text = song.artist, color = Color(0xFFA2AE37), style = MaterialTheme.typography.h1)
-        }
-        Icon(
-            imageVector = Icons.Default.FavoriteBorder,
-            contentDescription = null,
-            tint = Color.White
+                .align(Alignment.CenterEnd)
         )
     }
+
 }
-*/
 
 
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
-    MainView()
+
 }

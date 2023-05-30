@@ -15,4 +15,10 @@ class ChallengeService @Inject constructor(private val api: ChallengeApi) {
         }
     }
 
+    suspend fun getGenre(genre: String): List<Song> {
+        return withContext(Dispatchers.IO) {
+            api.searchGenre(genre).data
+        }
+    }
+
 }

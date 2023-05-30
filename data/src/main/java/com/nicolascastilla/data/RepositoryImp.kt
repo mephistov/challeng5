@@ -14,5 +14,9 @@ class RepositoryImp @Inject constructor(
         return apiService.getTrendings()
     }
 
+    override suspend fun getGenere(genre: String): List<Song> {
+        return apiService.getGenre(genre)
+    }
+
 
 }

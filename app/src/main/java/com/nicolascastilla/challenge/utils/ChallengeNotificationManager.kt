@@ -43,9 +43,13 @@ class ChallengeNotificationManager@Inject constructor(
         val resultIntent = Intent(context, MainActivity::class.java).apply {
             //putExtra("SONG_POSITION",0)
             //setAction("$id")
-            flags= Intent.FLAG_ACTIVITY_NEW_TASK
+            flags= Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
-        val resultPendingIntent = PendingIntent.getActivity(context,0,resultIntent, PendingIntent.FLAG_IMMUTABLE)
+        var pendigFlag = PendingIntent.FLAG_UPDATE_CURRENT
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            pendigFlag = PendingIntent.FLAG_MUTABLE
+        }
+        val resultPendingIntent = PendingIntent.getActivity(context,0,resultIntent, pendigFlag)
         val notificationManager = context?.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val channelId = CHANNEL_ID
         val channel = NotificationChannel(
@@ -100,9 +104,13 @@ class ChallengeNotificationManager@Inject constructor(
              val prevPendingIntent: PendingIntent = PendingIntent.getService(context, 0, prevPause, 0)
              val nextPendingIntent: PendingIntent = PendingIntent.getService(context, 0, nextPause, 0)
      */
-        val playPausePendingIntent = PendingIntent.getBroadcast(context, 124, playPause,  PendingIntent.FLAG_UPDATE_CURRENT )
-        val prevPendingIntent = PendingIntent.getBroadcast(context, 124, prevPause,  PendingIntent.FLAG_UPDATE_CURRENT )
-        val nextPendingIntent = PendingIntent.getBroadcast(context, 124, nextPause,  PendingIntent.FLAG_UPDATE_CURRENT )
+        var pendigFlag = PendingIntent.FLAG_UPDATE_CURRENT
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            pendigFlag = PendingIntent.FLAG_MUTABLE
+        }
+        val playPausePendingIntent = PendingIntent.getBroadcast(context, 124, playPause,  pendigFlag )
+        val prevPendingIntent = PendingIntent.getBroadcast(context, 124, prevPause,  pendigFlag )
+        val nextPendingIntent = PendingIntent.getBroadcast(context, 124, nextPause,  pendigFlag )
 
 
         remoteViews.setOnClickPendingIntent(R.id.button3,playPausePendingIntent);
