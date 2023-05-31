@@ -5,8 +5,9 @@ import android.media.MediaPlayer
 import android.os.IBinder
 import com.nicolascastilla.entities.Song
 import javax.inject.Inject
+import javax.inject.Singleton
 
-
+@Singleton
 class ServiceManager @Inject constructor(
     private val context: Context,
 ): ServiceConnection {

@@ -58,9 +58,10 @@ fun MainView() {
     val viewModel = viewModel<MainViewModel>()
     val scope = rememberCoroutineScope()
     val navController = rememberNavController()
-    val isPLaying by viewModel.isPlaying.collectAsState(initial = false)
 
-    viewModel.getGenereSearch("Pop")
+   // val isPlaying by viewModel.isPlaying.collectAsState(false)
+
+
 
     Scaffold(
         scaffoldState = scaffolState,
@@ -109,7 +110,7 @@ fun MainView() {
 
             MyNavHost(navController,scaffolState,viewModel)
 
-            if(isPLaying) {
+            if(viewModel.isPlaying.value) {
                 Box(
                         modifier = Modifier
                             .align(Alignment.BottomCenter)

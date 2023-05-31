@@ -32,13 +32,15 @@ class MainViewModel @Inject constructor(
     private val musicManager: ServiceManager
 ): ViewModel() {
 
-    private val _myTrendings: MutableStateFlow<List<Song>> = MutableStateFlow(emptyList())
-    val myTrendings: StateFlow<List<Song>> = _myTrendings
+    //private val _myTrendings: MutableStateFlow<List<Song>> = MutableStateFlow(emptyList())
+   // val myTrendings: StateFlow<List<Song>> = _myTrendings
+    val myTrendings = mutableStateOf<List<Song>>(listOf())
 
     val genereList: MutableStateFlow<List<Song>> = MutableStateFlow(emptyList())
 
-    private val _loading: MutableStateFlow<Boolean> = MutableStateFlow(true)
-    val isLoadins: StateFlow<Boolean> = _loading
+    //private val _loading: MutableStateFlow<Boolean> = MutableStateFlow(true)
+    //val isLoadins: StateFlow<Boolean> = _loading
+    val isLoading = mutableStateOf<Boolean>(true)
 
     private val _isTopViewVisible: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val isTopViewVisible: StateFlow<Boolean> = _isTopViewVisible
@@ -46,7 +48,8 @@ class MainViewModel @Inject constructor(
     private val _player = MutableLiveData<MediaPlayer?>()
     val player: LiveData<MediaPlayer?> = _player
 
-    val isPlaying: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    val isPlaying = mutableStateOf(false)//:MutableStateFlow<Boolean> = MutableStateFlow(false)
+
     val maxSizeSong: MutableStateFlow<Float> = MutableStateFlow(0.0f)
     val currentSongPosition: MutableStateFlow<Float> = MutableStateFlow(0.0f)
     val currentTitle: MutableStateFlow<String> = MutableStateFlow("")
@@ -67,7 +70,7 @@ class MainViewModel @Inject constructor(
 
 
     fun getTrendings(){
-        _loading.value = true
+        isLoading.value = true
         viewModelScope.launch(Dispatchers.IO) {
             val data = getTrendingsUseCase.getAllTrendingsSongs().map {list->
                 list.map { item->
@@ -76,8 +79,8 @@ class MainViewModel @Inject constructor(
                 }
             }
             data.collect {
-                _myTrendings.value = it
-                _loading.value = false
+                myTrendings.value = it
+                isLoading.value = false
             }
         }
 
@@ -160,10 +163,10 @@ class MainViewModel @Inject constructor(
         }
         genereList.value = updatedList
 
-        val updatedListT = _myTrendings.value.map {
+        val updatedListT = myTrendings.value.map {
             if (it.id == song.id) updatedSong else it
         }
-        _myTrendings.value = updatedListT
+        myTrendings.value = updatedListT
     }
 
 
@@ -259,6 +262,8 @@ class MainViewModel @Inject constructor(
 
     init {
         Utils.superUpdate = ::updateUI
+        getTrendings()
+        getGenereSearch("Pop")
     }
 
     fun initMediaPlayer(song: Song) {

@@ -50,8 +50,6 @@ import kotlinx.coroutines.launch
 @Composable
 fun Screen1MainView(navController: NavHostController, scaffolState: ScaffoldState,viewModel: MainViewModel){
 
-    viewModel.getTrendings()
-
     Box(modifier = Modifier
         .padding(16.dp)
         .fillMaxWidth()
@@ -127,8 +125,8 @@ fun TopBar(scaffoldState: ScaffoldState,viewModel: MainViewModel) {
 
 @Composable
 fun TrendingNow(viewModel: MainViewModel) {
-    val trendings by viewModel.myTrendings.collectAsState(emptyList())
-    val isLoading by viewModel.isLoadins.collectAsState(initial = true)
+    //val trendings by viewModel.myTrendings.collectAsState(emptyList())
+    //val isLoading by viewModel.isLoadins.collectAsState(initial = true)
     Column {
         Text(
             text = "Trending right now",
@@ -141,7 +139,7 @@ fun TrendingNow(viewModel: MainViewModel) {
                 .height(210.dp)
             //.background(Color.Green)
         ){
-            if (isLoading) {//TODO dejarlo por fuera y mandarle el loading a ver si mejora como el de genero
+            if (viewModel.isLoading.value) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
@@ -150,8 +148,8 @@ fun TrendingNow(viewModel: MainViewModel) {
                     modifier = Modifier .padding(10.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    items(trendings) { song ->
-                        RowTrending(song,trendings,viewModel)
+                    items(viewModel.myTrendings.value) { song ->
+                        RowTrending(song,viewModel.myTrendings.value,viewModel)
                     }
                 }
             }

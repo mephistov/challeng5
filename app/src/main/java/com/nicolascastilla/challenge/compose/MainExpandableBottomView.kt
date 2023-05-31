@@ -56,7 +56,7 @@ fun MainExpandableBottomView(viewModel: MainViewModel) {
 
 @Composable
 fun PlayerView(viewModel: MainViewModel) {
-    val isPLaying by viewModel.isPlaying.collectAsState(initial = true)
+    //val isPLaying by viewModel.isPlaying.collectAsState(initial = true)
     val maxSizeSong by viewModel.maxSizeSong.collectAsState(initial = 30.0f)
     val currentSongPosition by viewModel.currentSongPosition.collectAsState(initial = 0.0f)
     val currentTitle by viewModel.currentTitle.collectAsState(initial = "")
@@ -181,7 +181,7 @@ fun PlayerView(viewModel: MainViewModel) {
                             contentAlignment = Alignment.Center
                         ) {
                             IconButton(onClick = {viewModel.playPause()}) {
-                                if(!isPLaying)
+                                if(!viewModel.isPlaying.value)
                                 Icon(Icons.Filled.PlayArrow,
                                     contentDescription = "Play",
                                     tint = Color.Black,

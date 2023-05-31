@@ -28,7 +28,7 @@ import com.nicolascastilla.challenge.viewmodels.MainViewModel
 
 @Composable
 fun MiniPlayerView(viewModel: MainViewModel) {
-    val isPLaying by viewModel.isPlaying.collectAsState(initial = true)
+    //val isPLaying by viewModel.isPlaying.collectAsState(initial = true)
     val currentTitle by viewModel.currentTitle.collectAsState(initial = "")
     val currentArtist by viewModel.currentArtist.collectAsState(initial = "")
     var isVisible by remember { mutableStateOf(false)}
@@ -79,7 +79,7 @@ fun MiniPlayerView(viewModel: MainViewModel) {
                     contentAlignment = Alignment.Center
                 ) {
                     IconButton(onClick = {viewModel.playPause()}) {
-                        if(!isPLaying)
+                        if(!viewModel.isPlaying.value)
                             Icon(
                                 Icons.Filled.PlayArrow,
                                 contentDescription = "Play",
