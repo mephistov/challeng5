@@ -20,7 +20,6 @@ class IntentBoradcastReciver:BroadcastReceiver() {
             ServiceManagerEntryPoint::class.java
         )
         musicManager = hiltEntryPoint.serviceManager()
-        musicManager.init()
 
         intent?.let {
             val infoMap = it.getSerializableExtra("DATASONGI") as? HashMap<String, String>
