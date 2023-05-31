@@ -2,14 +2,14 @@ package com.nicolascastilla.challenge.di
 
 import android.app.Application
 import android.content.Context
-import com.nicolascastilla.challenge.compose.utils.ServiceManager
+import com.nicolascastilla.challenge.utils.ServiceManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ViewModelComponent
+import dagger.hilt.components.SingletonComponent
 
 @Module
-@InstallIn(ViewModelComponent::class)
+@InstallIn(SingletonComponent::class)
 object AndroidModules {
 
     @Provides
@@ -19,6 +19,8 @@ object AndroidModules {
 
     @Provides
     fun provideServiceManager(context: Context): ServiceManager {
-        return ServiceManager(context)
+        return ServiceManager(context).apply {
+            init()
+        }
     }
 }

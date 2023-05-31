@@ -1,5 +1,6 @@
 package com.nicolascastilla.challenge.compose
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -22,6 +23,7 @@ import com.nicolascastilla.challenge.viewmodels.MainViewModel
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -44,6 +46,7 @@ fun MainExpandableBottomView(viewModel: MainViewModel) {
             modifier = Modifier
                 .fillMaxSize()
                 .background(CustomBlack)
+
         ) {
 
             PlayerView(viewModel)
@@ -53,12 +56,13 @@ fun MainExpandableBottomView(viewModel: MainViewModel) {
 
 @Composable
 fun PlayerView(viewModel: MainViewModel) {
-    val song = viewModel.currentSong!!
     val isPLaying by viewModel.isPlaying.collectAsState(initial = true)
     val maxSizeSong by viewModel.maxSizeSong.collectAsState(initial = 30.0f)
     val currentSongPosition by viewModel.currentSongPosition.collectAsState(initial = 0.0f)
     val currentTitle by viewModel.currentTitle.collectAsState(initial = "")
     val currentArtist by viewModel.currentArtist.collectAsState(initial = "")
+    val artistImg by viewModel.img1.collectAsState(initial = "")
+    val albumImg by viewModel.img2.collectAsState(initial = "")
     ConstraintLayout(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -104,14 +108,14 @@ fun PlayerView(viewModel: MainViewModel) {
             )
             {
                 // Imagen de fondo
-                val urlIMge = song.artist.picture_big
+                val urlIMge = artistImg
                 RemoteImageFull(urlIMge)
                 Box(
                     modifier = Modifier
                         .size(200.dp)
                         .align(alignment = Alignment.Center)
                 ) {
-                    RemoteImageFull(song.album.cover_big)
+                    RemoteImageFull(albumImg)
                 }
             }
         }
@@ -147,10 +151,10 @@ fun PlayerView(viewModel: MainViewModel) {
                     horizontalArrangement = Arrangement.SpaceAround,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = {/*viewModel.playPause()*/}) {
+                    IconButton(onClick = {viewModel.changeRepeat()}) {
                         Icon(Icons.Filled.Repeat,
                             contentDescription = "Repeat",
-                            tint = Color.White,
+                            tint = viewModel.colorRepeat.value,
                             modifier = Modifier
                                 .size(50.dp)
                                 .padding(10.dp)
@@ -205,10 +209,10 @@ fun PlayerView(viewModel: MainViewModel) {
                             )
                         }
                     }
-                    IconButton(onClick = {/*viewModel.playPause()*/}) {
+                    IconButton(onClick = {viewModel.changeShuffle()}) {
                         Icon(Icons.Filled.Shuffle,
                             contentDescription = "Shuffle",
-                            tint = Color.White,
+                            tint = viewModel.colorShuffle.value,
                             modifier = Modifier
                                 .size(50.dp)
                                 .padding(10.dp)

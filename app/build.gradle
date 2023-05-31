@@ -84,6 +84,8 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout-compose:1.1.0-alpha09'
     implementation 'androidx.compose.foundation:foundation:1.4.3'
     implementation 'androidx.compose.material:material-icons-extended:1.4.3'
+    def nav_version = "2.5.3"
+    implementation "androidx.navigation:navigation-compose:$nav_version"
 
     // google dagger hilt
     implementation("com.google.dagger:hilt-android:2.44")
@@ -112,6 +114,8 @@ dependencies {
     kapt "androidx.room:room-compiler:2.5.1"
     //remote images
     implementation "io.coil-kt:coil-compose:1.4.0"
+
+   // implementation 'org.jetbrains.kotlinx:kotlinx-parcelize-runtime:1.8.21'
 }
 // Allow references to generated code
 kapt {
