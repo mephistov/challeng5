@@ -210,6 +210,8 @@ class MainViewModel @Inject constructor(
 
                 }else{
                     if(isRepeat){
+                        job?.cancel()
+                        stop()
                         Utils.currentSong = it.get(0)
                         initMediaPlayer(it.get(0))
                     }
