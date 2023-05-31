@@ -2,6 +2,7 @@ package com.nicolascastilla.challenge.viewmodels
 
 import android.media.MediaPlayer
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -64,11 +65,6 @@ class MainViewModel @Inject constructor(
 
     val isLoadingGenere: MutableStateFlow<Boolean> = MutableStateFlow(true)
 
-    init {
-       /* viewModelScope.launch(Dispatchers.IO){
-            musicManager.init()
-        }*/
-    }
 
     fun getTrendings(){
         _loading.value = true
@@ -174,75 +170,132 @@ class MainViewModel @Inject constructor(
 
 
     //------- player ---
+    val colorShuffle = mutableStateOf(Color.White)
+    val colorRepeat = mutableStateOf(Color.White)
+
+    var isRepeat = false
+    fun changeRepeat(){
+        if(!isRepeat)
+            colorRepeat.value = Color.Green
+        else
+            colorRepeat.value = Color.White
+        isRepeat = !isRepeat
+    }
+    fun changeShuffle(){
+        if(!isShoffle)
+            colorShuffle.value = Color.Green
+        else
+            colorShuffle.value = Color.White
+        isShoffle = !isShoffle
+    }
+
+    var isShoffle = false
+    fun isShuffle():List<Song>?{
+        if(isShoffle)
+            return listSongs?.shuffled()
+
+        return listSongs
+    }
+
     fun nextSong(){
-        listSongs?.let {
-            if(currentSongPLaying < (it.size)-1){
-                currentSongPLaying++
-                job?.cancel()
-                stop()
-                initMediaPlayer(it.get(currentSongPLaying))
+        Utils.currentSong?.let { currentS->
+            isShuffle()?.let {
+                var pos = it.indexOf(currentS)
+                if(pos < (it.size)-1){
+                    pos++
+                    job?.cancel()
+                    stop()
+                    Utils.currentSong = it.get(pos)
+                    initMediaPlayer(it.get(pos))
+
+                }else{
+                    if(isRepeat){
+                        Utils.currentSong = it.get(0)
+                        initMediaPlayer(it.get(0))
+                    }
+                }
             }
         }
+
 
     }
     fun prevSong(){
-        listSongs?.let {
-            if(currentSongPLaying >= 1){
-                currentSongPLaying--
-                job?.cancel()
-                stop()
-                initMediaPlayer(it.get(currentSongPLaying))
-            }
-        }
-    }
-
-    val myData = mutableStateOf("Initial Data")
-
-    fun updateUI(song: Song){
-        currentTitle.value = song.title
-        currentArtist.value = song.artist.name
-        img1.value = song.artist.picture_big
-        img2.value = song.album.cover_big
-        isPlaying.value = true;
-    }
-
-    fun initMediaPlayer(song: Song) {
-        updateUI(song)
-        _player.value = musicManager.initPLayer(song)
-        _player.value?.let {
-            it.setOnPreparedListener { mediaPlayer ->
-                mediaPlayer.start()
-                maxSizeSong.value = mediaPlayer.duration.toFloat()
-                job = viewModelScope.launch(Dispatchers.IO) {
-                    mediaPlayer?.let {
-                        while (it.isPlaying) {
-                            currentSongPosition.value = it.currentPosition.toFloat()
-                            delay(1000) // Actualiza cada segundo
-                        }
-                    }
+        Utils.currentSong?.let { currentS ->
+            isShuffle()?.let {
+                var pos = it.indexOf(currentS)
+                if (pos >= 1) {
+                    pos--
+                    job?.cancel()
+                    stop()
+                    Utils.currentSong = it.get(pos)
+                    initMediaPlayer(it.get(pos))
 
                 }
             }
-            it.setOnCompletionListener {
-                nextSong()
-            }
+        }
+    }
+
+    val myData = mutableStateOf("")
+    var pos = 0
+    fun updateUI(){
+        if(Utils.currentSong != null) {
+            currentTitle.value = Utils.currentSong!!.title
+            currentArtist.value = Utils.currentSong!!.artist.name
+            img1.value = Utils.currentSong!!.artist.picture_big
+            img2.value = Utils.currentSong!!.album.cover_big
+            isPlaying.value = true;
+            pos = 0;
+            currentSongPosition.value = pos.toFloat()
 
         }
+    }
+
+    fun updateSong(){
+        initMediaPlayer(Utils.currentSong!!)
+
+    }
+
+    init {
+        Utils.superUpdate = ::updateUI
+    }
+
+    fun initMediaPlayer(song: Song) {
+
+       musicManager.initPLayer(song)?.let {
+           it.setOnPreparedListener { mediaPlayer ->
+               mediaPlayer.start()
+               maxSizeSong.value = mediaPlayer.duration.toFloat()
+               updateUI()
+               job = viewModelScope.launch(Dispatchers.IO) {
+                   mediaPlayer?.let {
+                       while (it.isPlaying) {
+                           currentSongPosition.value = it.currentPosition.toFloat()
+                           delay(1000) // Actualiza cada segundo
+                       }
+                   }
+
+               }
+           }
+           it.setOnCompletionListener {
+               nextSong()
+           }
+
+       }
+
     }
 
 
     fun playPause() {
         musicManager.playPause()
-        val testbool = musicManager.isPLaying()
-        isPlaying.value = testbool
+        isPlaying.value = musicManager.isPLaying()
     }
 
     fun stop() {
-        isPlaying.value = false
-        job?.cancel()
-        musicManager.stopMusic()
-        player.value?.release()
-        _player.value = null
+         isPlaying.value = false
+         job?.cancel()
+         musicManager.stopMusic()
+        // player.value?.release()
+       //  _player.value = null
     }
 
     fun destroy() {

@@ -32,11 +32,20 @@ class MusicService: Service() {
             )
             setOnPreparedListener {
                 it.start()
+                mediaPlayer = it
             }
             setDataSource(url)
             prepareAsync()
         }
         return  mediaPlayer
+    }
+
+    fun getCurrentPosition():Int{
+        return mediaPlayer?.currentPosition ?: 0
+    }
+
+    fun getDuration():Int{
+        return mediaPlayer?.duration ?: 0
     }
 
     fun changeMusic(song:String){
@@ -105,20 +114,24 @@ class MusicService: Service() {
         return START_STICKY
     }
 
- /*   fun createNotificationChannel() {
+    fun getPlayer():MediaPlayer? {
+        return mediaPlayer
+    }
 
-            val serviceChannel = NotificationChannel(
-                CHANNEL_ID,
-                "Music Player Channel",
-                NotificationManager.IMPORTANCE_DEFAULT,
-            ).apply {
-                setSound(null, null)
-            }
+    /*   fun createNotificationChannel() {
 
-            val manager = getSystemService(NotificationManager::class.java)
-            manager?.createNotificationChannel(serviceChannel)
+               val serviceChannel = NotificationChannel(
+                   CHANNEL_ID,
+                   "Music Player Channel",
+                   NotificationManager.IMPORTANCE_DEFAULT,
+               ).apply {
+                   setSound(null, null)
+               }
 
-    }*/
+               val manager = getSystemService(NotificationManager::class.java)
+               manager?.createNotificationChannel(serviceChannel)
+
+       }*/
 
     // ...
 

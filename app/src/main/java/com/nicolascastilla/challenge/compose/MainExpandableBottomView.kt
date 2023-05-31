@@ -151,10 +151,10 @@ fun PlayerView(viewModel: MainViewModel) {
                     horizontalArrangement = Arrangement.SpaceAround,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = {/*viewModel.playPause()*/}) {
+                    IconButton(onClick = {viewModel.changeRepeat()}) {
                         Icon(Icons.Filled.Repeat,
                             contentDescription = "Repeat",
-                            tint = Color.White,
+                            tint = viewModel.colorRepeat.value,
                             modifier = Modifier
                                 .size(50.dp)
                                 .padding(10.dp)
@@ -209,10 +209,10 @@ fun PlayerView(viewModel: MainViewModel) {
                             )
                         }
                     }
-                    IconButton(onClick = {/*viewModel.playPause()*/}) {
+                    IconButton(onClick = {viewModel.changeShuffle()}) {
                         Icon(Icons.Filled.Shuffle,
                             contentDescription = "Shuffle",
-                            tint = Color.White,
+                            tint = viewModel.colorShuffle.value,
                             modifier = Modifier
                                 .size(50.dp)
                                 .padding(10.dp)

@@ -11,9 +11,11 @@ class ServiceManager @Inject constructor(
     private val context: Context,
 ): ServiceConnection {
 
+
     private lateinit var musicService: MusicService
     private var bound: Boolean = false
     private lateinit var intentService: Intent
+    private var player: MediaPlayer? = null
     val notifManager by lazy {
         ChallengeNotificationManager(context)
     }
@@ -31,6 +33,13 @@ class ServiceManager @Inject constructor(
     var external:Int = 0
     fun setOutsiderOptions(opc:Int){
         external = opc
+    }
+
+    fun getDuration():Int{
+        if (bound) {
+            musicService.getCurrentPosition()
+        }
+        return 0
     }
 
     override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
@@ -51,11 +60,32 @@ class ServiceManager @Inject constructor(
         bound = false
     }
 
-    fun initPLayer(song:Song): MediaPlayer? {
+ /*   fun initPLayer(song: Song,  action: () -> Unit): MediaPlayer? {
         if (bound) {
             notifManager.setLocalNotification(true)
             return musicService.initPlayer(song.preview).apply {
                 this?.let {
+                    it.setOnCompletionListener {
+                        outsiderNext()
+                        action()
+                    }
+                }
+            }
+        }else
+            return null
+    }*/
+    fun getMediaPlayer():MediaPlayer?{
+         if (bound) {
+             musicService.getPlayer()
+         }
+        return null
+    }
+    fun initPLayer(song: Song): MediaPlayer? {
+        if (bound) {
+            notifManager.setLocalNotification(true)
+            return musicService.initPlayer(song.preview).apply {
+                this?.let {
+                    Utils.superUpdate()
                     it.setOnCompletionListener {
                         outsiderNext()
                     }
@@ -63,6 +93,13 @@ class ServiceManager @Inject constructor(
             }
         }else
             return null
+    }
+
+    fun getCurrentPosition():Int{
+        if (bound) {
+            musicService.getCurrentPosition()
+        }
+        return 0
     }
 
     fun changeMusic(newSong:String){
